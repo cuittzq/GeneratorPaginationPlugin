@@ -48,6 +48,7 @@ public class MysqlPaginationPlugin extends PluginAdapter {
 
     private void addLimit(TopLevelClass topLevelClass,
                           IntrospectedTable introspectedTable, String name) {
+        topLevelClass.addImportedType(new FullyQualifiedJavaType("com.github.cuittzq.common.plugins.PageHelper"));
         CommentGenerator commentGenerator = context.getCommentGenerator();
         Field field = new Field();
         field.setVisibility(JavaVisibility.PROTECTED);
