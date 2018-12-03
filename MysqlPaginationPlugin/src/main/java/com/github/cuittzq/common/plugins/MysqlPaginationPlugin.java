@@ -28,8 +28,7 @@ public class MysqlPaginationPlugin extends PluginAdapter {
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass,
                                               IntrospectedTable introspectedTable) {
         // add field, getter, setter for limit clause
-        addLimit(topLevelClass, introspectedTable, "limitStart");
-        addLimit(topLevelClass, introspectedTable, "limitEnd");
+        addPage(topLevelClass, introspectedTable, "page");
         return super.modelExampleClassGenerated(topLevelClass,
                 introspectedTable);
     }
@@ -37,22 +36,21 @@ public class MysqlPaginationPlugin extends PluginAdapter {
     @Override
     public boolean sqlMapSelectByExampleWithoutBLOBsElementGenerated(
             XmlElement element, IntrospectedTable introspectedTable) {
-        XmlElement isNotNullElement = new XmlElement("if"); //$NON-NLS-1$
-        isNotNullElement.addAttribute(new Attribute("test", "limitStart != null and limitStart>=0")); //$NON-NLS-1$ //$NON-NLS-2$
-        isNotNullElement.addElement(new TextElement(
-                "limit #{limitStart} , #{limitEnd}"));
-        element.addElement(isNotNullElement);
+        XmlElement page = new XmlElement("if");
+        page.addAttribute(new Attribute("test", "page != null"));
+        page.addElement(new TextElement("limit #{page.begin} , #{page.length}"));
+        element.addElement(page);
         return super.sqlMapUpdateByExampleWithoutBLOBsElementGenerated(element,
                 introspectedTable);
     }
 
-    private void addLimit(TopLevelClass topLevelClass,
-                          IntrospectedTable introspectedTable, String name) {
+    private void addPage(TopLevelClass topLevelClass,
+                         IntrospectedTable introspectedTable, String name) {
         topLevelClass.addImportedType(new FullyQualifiedJavaType("com.github.cuittzq.common.plugins.PageHelper"));
         CommentGenerator commentGenerator = context.getCommentGenerator();
         Field field = new Field();
         field.setVisibility(JavaVisibility.PROTECTED);
-        field.setType(PrimitiveTypeWrapper.getIntegerInstance());
+        field.setType(new FullyQualifiedJavaType("com.github.cuittzq.common.plugins.PageHelper"));
         field.setName(name);
         commentGenerator.addFieldComment(field, introspectedTable);
         topLevelClass.addField(field);
@@ -61,13 +59,13 @@ public class MysqlPaginationPlugin extends PluginAdapter {
         Method method = new Method();
         method.setVisibility(JavaVisibility.PUBLIC);
         method.setName("set" + camel);
-        method.addParameter(new Parameter(PrimitiveTypeWrapper.getIntegerInstance(), name));
+        method.addParameter(new Parameter(new FullyQualifiedJavaType("com.github.cuittzq.common.plugins.PageHelper"), name));
         method.addBodyLine("this." + name + "=" + name + ";");
         commentGenerator.addGeneralMethodComment(method, introspectedTable);
         topLevelClass.addMethod(method);
         method = new Method();
         method.setVisibility(JavaVisibility.PUBLIC);
-        method.setReturnType(PrimitiveTypeWrapper.getIntegerInstance());
+        method.setReturnType(new FullyQualifiedJavaType("com.github.cuittzq.common.plugins.PageHelper"));
         method.setName("get" + camel);
         method.addBodyLine("return " + name + ";");
         commentGenerator.addGeneralMethodComment(method, introspectedTable);
